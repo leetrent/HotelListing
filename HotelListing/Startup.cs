@@ -1,3 +1,4 @@
+using HotelListing.Config;
 using HotelListing.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -31,11 +32,16 @@ namespace HotelListing
 
             services.AddDbContext<DatabaseContext>(options => options.UseSqlServer(Configuration.GetConnectionString("sqlConnection")));
 
+            // CORS
             services.AddCors(cors =>
             {
                 cors.AddPolicy("CorsPolicyAllowAll", corsPolicyBuilder => corsPolicyBuilder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
-            }); ;
+            });
 
+            // AUTOMAPPER
+            services.AddAutoMapper(typeof(MapperConfig));
+
+            // SWAGGER
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "HotelListing", Version = "v1" });
