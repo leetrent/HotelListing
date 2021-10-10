@@ -17,6 +17,7 @@ namespace HotelListing.Data
 
             modelBuilder.ApplyConfiguration(new CountryConfig());
             modelBuilder.ApplyConfiguration(new HotelConfig());
+            modelBuilder.ApplyConfiguration(new RoleConfig());
         }
     }
 }

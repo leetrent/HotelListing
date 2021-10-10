@@ -58,6 +58,8 @@ namespace HotelListing.Controllers
 
                     return BadRequest(ModelState);
                 }
+
+                await _userManager.AddToRolesAsync(userEntity, userDTO.Roles);
                 return Accepted();
             }
             catch (Exception exc)
