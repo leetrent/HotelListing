@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
@@ -24,9 +25,13 @@ namespace HotelListing.Services
             _configuration = configuration;
         }
 
-        public Task<string> CreateToken()
+        public async Task<string> CreateToken()
         {
-            throw new NotImplementedException();
+            SigningCredentials signingCredentials = this.GetSigningCredentials();
+            List<Claim> claims = await this.GetClaims();
+            JwtSecurityToken token = this.GenerateTokenOptions(signingCredentials, claims);
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
         public async Task<bool> ValidateUser(LoginUserDTO userDTO)
@@ -37,6 +42,8 @@ namespace HotelListing.Services
 
             return await _userManager.CheckPasswordAsync(_apiUser, userDTO.Password);
         }
+
+
 
         private SigningCredentials GetSigningCredentials()
         {
@@ -62,6 +69,23 @@ namespace HotelListing.Services
             }
 
             return claims;
+        }
+
+        private JwtSecurityToken GenerateTokenOptions(SigningCredentials signingCredentials, List<Claim> claims)
+        {
+            IConfigurationSection jwtSettings = _configuration.GetSection("Jwt");
+            var expiration = DateTime.Now.AddMinutes(Convert.ToDouble(jwtSettings.GetSection("Lifetime").Value));
+
+            JwtSecurityToken token = new JwtSecurityToken
+            (
+                issuer: jwtSettings.GetSection("Issuer").Value, 
+                claims: claims, 
+                expires: expiration,
+                signingCredentials: signingCredentials
+            );
+
+            return token;
+    
         }
     }
 }
