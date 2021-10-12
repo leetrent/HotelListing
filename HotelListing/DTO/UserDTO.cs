@@ -9,6 +9,11 @@ namespace HotelListing.DTO
         [DataType(DataType.EmailAddress)]
         public string Email { get; set; }
 
+        public string UserName
+        {
+            get { return this.Email;  }
+        }
+
         [Required]
         [StringLength(15, ErrorMessage = "Your Password is limited to {2} to {1} characters", MinimumLength = 6)]
         public string Password { get; set; }
