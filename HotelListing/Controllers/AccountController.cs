@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using HotelListing.Data;
 using HotelListing.DTO;
+using HotelListing.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -16,12 +17,14 @@ namespace HotelListing.Controllers
     public class AccountController : ControllerBase
     {
         private readonly UserManager<ApiUser> _userManager;
+        private readonly IAuthManager _authManager;
         private readonly IMapper _mapper;
         private readonly ILogger<AccountController> _logger;
 
-        public AccountController(UserManager<ApiUser> userManager, IMapper mapper, ILogger<AccountController> logger)
+        public AccountController(UserManager<ApiUser> userManager, IAuthManager authManager, IMapper mapper, ILogger<AccountController> logger)
         {
             _userManager = userManager;
+            _authManager = authManager;
             _mapper = mapper;
             _logger = logger;
         }
@@ -73,36 +76,34 @@ namespace HotelListing.Controllers
 
         }
 
-        //[HttpPost]
-        //[Route("login")]
-        //public async Task<IActionResult> Login([FromBody] LoginUserDTO loginDTO)
-        //{
-        //    _logger.LogInformation($"Login attempt for {loginDTO.Email} ");
+        [HttpPost]
+        [Route("login")]
+        public async Task<IActionResult> Login([FromBody] LoginUserDTO userDTO)
+        {
+            _logger.LogInformation($"Login attempt for {userDTO.Email} ");
 
-        //    if (ModelState.IsValid == false)
-        //    {
-        //        return BadRequest(ModelState);
-        //    }
+            if (ModelState.IsValid == false)
+            {
+                return BadRequest(ModelState);
+            }
 
-        //    try
-        //    {
-        //        SignInResult signInResult = await _signInManager.PasswordSignInAsync(loginDTO.Email, loginDTO.Password, false, false);
+            try
+            {
+                if (await _authManager.ValidateUser(userDTO) == false)
+                {
+                    return Unauthorized();
+                }
 
-        //        if (signInResult.Succeeded == false)
-        //        {
-        //            _logger.LogError($"SignInManager.PasswordSignInAsync failed for '{loginDTO.Email}'");
-        //            return Unauthorized(loginDTO);
-        //        }
-        //        return Accepted();
-        //    }
-        //    catch (Exception exc)
-        //    {
-        //        _logger.LogError(exc, $"Exception encountered in {nameof(Login)}");
-        //        _logger.LogError(exc.Message);
-        //        _logger.LogError(exc.StackTrace);
+                return Accepted(new { Token = await _authManager.CreateToken() });
+            }
+            catch (Exception exc)
+            {
+                _logger.LogError(exc, $"Exception encountered in {nameof(Login)}");
+                _logger.LogError(exc.Message);
+                _logger.LogError(exc.StackTrace);
 
-        //        return Problem($"Exception encountered in {nameof(Login)}", statusCode: StatusCodes.Status500InternalServerError);
-        //    }
-        //}
+                return Problem($"Exception encountered in {nameof(Login)}", statusCode: StatusCodes.Status500InternalServerError);
+            }
+        }
     }
 }
