@@ -49,7 +49,7 @@ namespace HotelListing.Controllers
         }
 
         [Authorize]
-        [HttpGet("{id:int}")]
+        [HttpGet("{id:int}", Name = "GetHotel")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetHotel(int id)
@@ -83,6 +83,34 @@ namespace HotelListing.Controllers
                 _logger.LogError(exc.Message);
                 _logger.LogError(exc.StackTrace);
                 return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
+
+        [HttpPost]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CreateHotel([FromBody] CreateHotelDTO hotelDTO)
+        {
+            if (ModelState.IsValid == false)
+            {
+                _logger.LogError($"Invalid POST: {nameof(CreateHotel)}");
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                Hotel hotel = _mapper.Map<Hotel>(hotelDTO);
+                await _unitOfWork.Hotels.Insert(hotel);
+                await _unitOfWork.Save();
+
+                return CreatedAtRoute("GetHotel", new { id = hotel.Id }, hotel);
+            }
+            catch (Exception exc)
+            {
+                _logger.LogError(exc.Message);
+                _logger.LogError(exc.StackTrace);
+                return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected server-side error was encountered when attempting to create a new hotel.");
             }
         }
     }
