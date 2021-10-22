@@ -48,7 +48,6 @@ namespace HotelListing.Controllers
             }
         }
 
-        [Authorize]
         [HttpGet("{id:int}", Name = "GetHotel")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -86,6 +85,7 @@ namespace HotelListing.Controllers
             }
         }
 
+       // [Authorize]
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
