@@ -158,5 +158,41 @@ namespace HotelListing.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, $"An unexpected server-side error was encountered when attempting to update Country with ID of {id}.");
             }
         }
+
+        [Authorize(Roles = "Administrator")]
+        [HttpDelete("{id:int}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> DeleteCountry(int id)
+        {
+            if (id < 1)
+            {
+                string errMsg = $"Country ID cannot be less than zero. Cannot continue with {nameof(DeleteCountry)}";
+                _logger.LogError(errMsg);
+                return BadRequest(errMsg);
+            }
+            try
+            {
+                Country country = await _unitOfWork.Countries.Get(q => q.Id == id);
+                if (country == null)
+                {
+                    string errMsg = $"Country with ID of {id} was NOT FOUND. Cannot continue with {nameof(DeleteCountry)}";
+                    _logger.LogError(errMsg);
+                    return BadRequest(errMsg);
+                }
+
+                await _unitOfWork.Countries.Delete(id);
+                await _unitOfWork.Save();
+
+                return NoContent();
+            }
+            catch (Exception exc)
+            {
+                _logger.LogError(exc.Message);
+                _logger.LogError(exc.StackTrace);
+                return StatusCode(StatusCodes.Status500InternalServerError, $"An unexpected server-side error was encountered when attempting to delete Country with ID of {id}.");
+            }
+        }
     }
 }
