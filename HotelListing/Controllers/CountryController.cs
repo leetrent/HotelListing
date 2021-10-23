@@ -114,5 +114,49 @@ namespace HotelListing.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected server-side error was encountered when attempting to save a new country.");
             }
         }
+
+        [Authorize(Roles = "Administrator")]
+        [HttpPut("{id:int}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> UpdateCountry(int id, [FromBody] UpdateCountryDTO countryDTO)
+        {
+            if (id < 1)
+            {
+                string errMsg = $"Country ID cannot be less than zero. Cannot continue with {nameof(UpdateCountry)}";
+                _logger.LogError(errMsg);
+                return BadRequest(errMsg);
+            }
+
+            if (ModelState.IsValid == false)
+            {
+                _logger.LogError($"Model state is invalid in {nameof(UpdateCountry)} for Country ID {id}.");
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                Country country = await _unitOfWork.Countries.Get(q => q.Id == id);
+                if (country == null)
+                {
+                    string errMsg = $"Country with ID of {id} was NOT FOUND. Cannot continue with {nameof(UpdateCountry)}";
+                    _logger.LogError(errMsg);
+                    return BadRequest(errMsg);
+                }
+
+                _mapper.Map(countryDTO, country);
+                _unitOfWork.Countries.Update(country);
+                await _unitOfWork.Save();
+
+                return NoContent();
+            }
+            catch (Exception exc)
+            {
+                _logger.LogError(exc.Message);
+                _logger.LogError(exc.StackTrace);
+                return StatusCode(StatusCodes.Status500InternalServerError, $"An unexpected server-side error was encountered when attempting to update Country with ID of {id}.");
+            }
+        }
     }
 }

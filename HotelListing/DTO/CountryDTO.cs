@@ -15,6 +15,9 @@ namespace HotelListing.DTO
         [StringLength(2, MinimumLength = 2, ErrorMessage = "{0} must be {1} characters in length.")]
         public string ShortName { get; set; }
     }
+
+    public class UpdateCountryDTO : CreateCountryDTO { }
+
     public class CountryDTO : CreateCountryDTO
     {
         public int Id { get; set; }
