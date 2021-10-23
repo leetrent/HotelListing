@@ -157,5 +157,41 @@ namespace HotelListing.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, $"An unexpected server-side error was encountered when attempting to update Hotel with ID of {id}.");
             }
         }
+
+        [Authorize(Roles = "Administrator")]
+        [HttpDelete("{id:int}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> DeleteHotel(int id)
+        {
+            if (id < 1)
+            {
+                string errMsg = $"Hotel ID cannot be less than zero. Cannot continue with {nameof(DeleteHotel)}";
+                _logger.LogError(errMsg);
+                return BadRequest(errMsg);
+            }
+            try
+            {
+                Hotel hotel = await _unitOfWork.Hotels.Get(q => q.Id == id);
+                if (hotel == null)
+                {
+                    string errMsg = $"Hotel with ID of {id} was NOT FOUND. Cannot continue with {nameof(DeleteHotel)}";
+                    _logger.LogError(errMsg);
+                    return BadRequest(errMsg);
+                }
+
+                await _unitOfWork.Hotels.Delete(id);
+                await _unitOfWork.Save();
+
+                return NoContent();
+            }
+            catch (Exception exc)
+            {
+                _logger.LogError(exc.Message);
+                _logger.LogError(exc.StackTrace);
+                return StatusCode(StatusCodes.Status500InternalServerError, $"An unexpected server-side error was encountered when attempting to delete Hotel with ID of {id}.");
+            }
+        }
     }
 }
