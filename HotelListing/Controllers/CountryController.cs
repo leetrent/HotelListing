@@ -2,6 +2,7 @@
 using HotelListing.Data;
 using HotelListing.DTO;
 using HotelListing.IRepository;
+using HotelListing.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -11,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using X.PagedList;
 
 namespace HotelListing.Controllers
 {
@@ -32,11 +34,11 @@ namespace HotelListing.Controllers
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetCountries()
+        public async Task<IActionResult> GetCountries([FromQuery] RequestParams requestParams)
         {
             try
             {
-                IList<Country> entityList = await _unitOfWork.Countries.GetAll();
+                IPagedList<Country> entityList = await _unitOfWork.Countries.GetPagedList(requestParams);
                 IList<CountryDTO> dtoList = _mapper.Map<IList<CountryDTO>>(entityList);
 
                 return Ok(dtoList);
