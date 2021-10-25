@@ -16,7 +16,7 @@ using X.PagedList;
 
 namespace HotelListing.Controllers
 {
-    [ApiVersion("1.0")]
+    [ApiVersion("1.0", Deprecated = true)]
     [Route("api/{v:apiversion}/country")]
     [ApiController]
     public class CountryController : ControllerBase
