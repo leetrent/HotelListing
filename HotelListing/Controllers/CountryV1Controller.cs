@@ -19,13 +19,13 @@ namespace HotelListing.Controllers
     [ApiVersion("1.0", Deprecated = true)]
     [Route("api/{v:apiversion}/country")]
     [ApiController]
-    public class CountryController : ControllerBase
+    public class CountryV1Controller : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
-        private readonly ILogger<CountryController> _logger;
+        private readonly ILogger<CountryV1Controller> _logger;
 
-        public CountryController(IUnitOfWork unitOfWork, IMapper mapper, ILogger<CountryController> logger)
+        public CountryV1Controller(IUnitOfWork unitOfWork, IMapper mapper, ILogger<CountryV1Controller> logger)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
