@@ -36,19 +36,11 @@ namespace HotelListing.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetCountries([FromQuery] RequestParams requestParams)
         {
-            try
-            {
-                IPagedList<Country> entityList = await _unitOfWork.Countries.GetPagedList(requestParams);
-                IList<CountryDTO> dtoList = _mapper.Map<IList<CountryDTO>>(entityList);
 
-                return Ok(dtoList);
-            }
-            catch (Exception exc)
-            {
-                _logger.LogError(exc.Message);
-                _logger.LogError(exc.StackTrace);
-                return StatusCode(StatusCodes.Status500InternalServerError);
-            }
+            IPagedList<Country> entityList = await _unitOfWork.Countries.GetPagedList(requestParams);
+            IList<CountryDTO> dtoList = _mapper.Map<IList<CountryDTO>>(entityList);
+
+            return Ok(dtoList);
         }
 
         [HttpGet("{id:int}", Name ="GetCountry")]
@@ -56,36 +48,27 @@ namespace HotelListing.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetCountry(int id)
         {
-            try
-            {
-                ////////////////////////////////////////////////////////////////////////////////////////////////////
-                // Version #1:
-                ////////////////////////////////////////////////////////////////////////////////////////////////////
-                Expression<Func<Country, bool>> expression = c => c.Id == id;
-                List<string> includes = new List<string> { "Hotels" };
-                Country entity = await _unitOfWork.Countries.Get(expression, includes);
+            ////////////////////////////////////////////////////////////////////////////////////////////////////
+            // Version #1:
+            ////////////////////////////////////////////////////////////////////////////////////////////////////
+            Expression<Func<Country, bool>> expression = c => c.Id == id;
+            List<string> includes = new List<string> { "Hotels" };
+            Country entity = await _unitOfWork.Countries.Get(expression, includes);
 
-                ////////////////////////////////////////////////////////////////////////////////////////////////////
-                // Version #2:
-                ////////////////////////////////////////////////////////////////////////////////////////////////////
-                //Country entity = await _unitOfWork.Countries.Get(c => c.Id == id, new List<string> { "Hotels" });
+            ////////////////////////////////////////////////////////////////////////////////////////////////////
+            // Version #2:
+            ////////////////////////////////////////////////////////////////////////////////////////////////////
+            //Country entity = await _unitOfWork.Countries.Get(c => c.Id == id, new List<string> { "Hotels" });
 
-                ////////////////////////////////////////////////////////////////////////////////////////////////////
-                // Map Entity to DTO
-                ////////////////////////////////////////////////////////////////////////////////////////////////////
-                CountryDTO dto = _mapper.Map<CountryDTO>(entity);
+            ////////////////////////////////////////////////////////////////////////////////////////////////////
+            // Map Entity to DTO
+            ////////////////////////////////////////////////////////////////////////////////////////////////////
+            CountryDTO dto = _mapper.Map<CountryDTO>(entity);
 
-                ////////////////////////////////////////////////////////////////////////////////////////////////////
-                // Return ActionResult
-                ////////////////////////////////////////////////////////////////////////////////////////////////////
-                return Ok(dto);
-            }
-            catch (Exception exc)
-            {
-                _logger.LogError(exc.Message);
-                _logger.LogError(exc.StackTrace);
-                return StatusCode(StatusCodes.Status500InternalServerError);
-            }
+            ////////////////////////////////////////////////////////////////////////////////////////////////////
+            // Return ActionResult
+            ////////////////////////////////////////////////////////////////////////////////////////////////////         
+            return Ok(dto);
         }
 
         [Authorize(Roles = "Administrator")]
@@ -101,20 +84,12 @@ namespace HotelListing.Controllers
                 return BadRequest(ModelState);
             }
 
-            try
-            {
-                Country country = _mapper.Map<Country>(countryDTO);
-                await _unitOfWork.Countries.Insert(country);
-                await _unitOfWork.Save();
+            Country country = _mapper.Map<Country>(countryDTO);
+            await _unitOfWork.Countries.Insert(country);
+            await _unitOfWork.Save();
 
-                return CreatedAtRoute("GetCountry", new { id = country.Id }, country);
-            }
-            catch (Exception exc)
-            {
-                _logger.LogError(exc.Message);
-                _logger.LogError(exc.StackTrace);
-                return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected server-side error was encountered when attempting to save a new country.");
-            }
+            return CreatedAtRoute("GetCountry", new { id = country.Id }, country);
+
         }
 
         [Authorize(Roles = "Administrator")]
@@ -137,28 +112,19 @@ namespace HotelListing.Controllers
                 return BadRequest(ModelState);
             }
 
-            try
+            Country country = await _unitOfWork.Countries.Get(q => q.Id == id);
+            if (country == null)
             {
-                Country country = await _unitOfWork.Countries.Get(q => q.Id == id);
-                if (country == null)
-                {
-                    string errMsg = $"Country with ID of {id} was NOT FOUND. Cannot continue with {nameof(UpdateCountry)}";
-                    _logger.LogError(errMsg);
-                    return BadRequest(errMsg);
-                }
-
-                _mapper.Map(countryDTO, country);
-                _unitOfWork.Countries.Update(country);
-                await _unitOfWork.Save();
-
-                return NoContent();
+                string errMsg = $"Country with ID of {id} was NOT FOUND. Cannot continue with {nameof(UpdateCountry)}";
+                _logger.LogError(errMsg);
+                return BadRequest(errMsg);
             }
-            catch (Exception exc)
-            {
-                _logger.LogError(exc.Message);
-                _logger.LogError(exc.StackTrace);
-                return StatusCode(StatusCodes.Status500InternalServerError, $"An unexpected server-side error was encountered when attempting to update Country with ID of {id}.");
-            }
+
+            _mapper.Map(countryDTO, country);
+            _unitOfWork.Countries.Update(country);
+            await _unitOfWork.Save();
+
+            return NoContent();
         }
 
         [Authorize(Roles = "Administrator")]
@@ -174,27 +140,19 @@ namespace HotelListing.Controllers
                 _logger.LogError(errMsg);
                 return BadRequest(errMsg);
             }
-            try
-            {
-                Country country = await _unitOfWork.Countries.Get(q => q.Id == id);
-                if (country == null)
-                {
-                    string errMsg = $"Country with ID of {id} was NOT FOUND. Cannot continue with {nameof(DeleteCountry)}";
-                    _logger.LogError(errMsg);
-                    return BadRequest(errMsg);
-                }
 
-                await _unitOfWork.Countries.Delete(id);
-                await _unitOfWork.Save();
-
-                return NoContent();
-            }
-            catch (Exception exc)
+            Country country = await _unitOfWork.Countries.Get(q => q.Id == id);
+            if (country == null)
             {
-                _logger.LogError(exc.Message);
-                _logger.LogError(exc.StackTrace);
-                return StatusCode(StatusCodes.Status500InternalServerError, $"An unexpected server-side error was encountered when attempting to delete Country with ID of {id}.");
+                string errMsg = $"Country with ID of {id} was NOT FOUND. Cannot continue with {nameof(DeleteCountry)}";
+                _logger.LogError(errMsg);
+                return BadRequest(errMsg);
             }
+
+            await _unitOfWork.Countries.Delete(id);
+            await _unitOfWork.Save();
+
+            return NoContent();
         }
     }
 }

@@ -6,6 +6,11 @@ using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Diagnostics;
+using Serilog;
+using HotelListing.Models;
 
 namespace HotelListing
 {
@@ -39,6 +44,28 @@ namespace HotelListing
                     ValidIssuer = jwtSettings.GetSection("Issuer").Value,
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
                 };
+            });
+        }
+
+        public static void ConfigureExceptionHandler(this IApplicationBuilder appBuilder)
+        {
+            appBuilder.UseExceptionHandler(error =>
+            {
+                error.Run(async context => {
+                    context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                    context.Response.ContentType = "application.json";
+
+                    var contextFeature = context.Features.Get<IExceptionHandlerFeature>();
+                    if (contextFeature != null)
+                    {
+                        Log.Error($"Server-side error encountered: {contextFeature.Error}");
+                        await context.Response.WriteAsync(new Error
+                        {
+                            StatusCode = context.Response.StatusCode,
+                            Message = "An unexpected server-side exception was encountred. Please contact technical support."
+                        }.ToString());
+                    }
+                }); 
             });
         }
     }

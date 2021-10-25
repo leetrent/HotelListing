@@ -33,19 +33,10 @@ namespace HotelListing.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetHotels()
         {
-            try
-            {
-                IList<Hotel> entityList = await _unitOfWork.Hotels.GetAll();
-                IList<HotelDTO> dtoList = _mapper.Map<IList<HotelDTO>>(entityList);
+            IList<Hotel> entityList = await _unitOfWork.Hotels.GetAll();
+            IList<HotelDTO> dtoList = _mapper.Map<IList<HotelDTO>>(entityList);
 
-                return Ok(dtoList);
-            }
-            catch (Exception exc)
-            {
-                _logger.LogError(exc.Message);
-                _logger.LogError(exc.StackTrace);
-                return StatusCode(StatusCodes.Status500InternalServerError);
-            }
+            return Ok(dtoList);
         }
 
         [HttpGet("{id:int}", Name = "GetHotel")]
@@ -53,36 +44,27 @@ namespace HotelListing.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetHotel(int id)
         {
-            try
-            {
-                ////////////////////////////////////////////////////////////////////////////////////////////////////
-                // Version #1:
-                ////////////////////////////////////////////////////////////////////////////////////////////////////
-                Expression<Func<Hotel, bool>> expression = e => e.Id == id;
-                List<string> includes = new List<string> { "Country" };
-                Hotel entity = await _unitOfWork.Hotels.Get(expression, includes);
+            ////////////////////////////////////////////////////////////////////////////////////////////////////
+            // Version #1:
+            ////////////////////////////////////////////////////////////////////////////////////////////////////
+            Expression<Func<Hotel, bool>> expression = e => e.Id == id;
+            List<string> includes = new List<string> { "Country" };
+            Hotel entity = await _unitOfWork.Hotels.Get(expression, includes);
 
-                ////////////////////////////////////////////////////////////////////////////////////////////////////
-                // Version #2:
-                ////////////////////////////////////////////////////////////////////////////////////////////////////
-                //Hotel entity = await _unitOfWork.Hotels.Get(e => e.Id == id, new List<string> { "Country" });
+            ////////////////////////////////////////////////////////////////////////////////////////////////////
+            // Version #2:
+            ////////////////////////////////////////////////////////////////////////////////////////////////////
+            //Hotel entity = await _unitOfWork.Hotels.Get(e => e.Id == id, new List<string> { "Country" });
 
-                ////////////////////////////////////////////////////////////////////////////////////////////////////
-                // Map Entity to DTO
-                ////////////////////////////////////////////////////////////////////////////////////////////////////
-                HotelDTO dto = _mapper.Map<HotelDTO>(entity);
+            ////////////////////////////////////////////////////////////////////////////////////////////////////
+            // Map Entity to DTO
+            ////////////////////////////////////////////////////////////////////////////////////////////////////
+            HotelDTO dto = _mapper.Map<HotelDTO>(entity);
 
-                ////////////////////////////////////////////////////////////////////////////////////////////////////
-                // Return ActionResult
-                ////////////////////////////////////////////////////////////////////////////////////////////////////
-                return Ok(dto);
-            }
-            catch (Exception exc)
-            {
-                _logger.LogError(exc.Message);
-                _logger.LogError(exc.StackTrace);
-                return StatusCode(StatusCodes.Status500InternalServerError);
-            }
+            ////////////////////////////////////////////////////////////////////////////////////////////////////
+            // Return ActionResult
+            ////////////////////////////////////////////////////////////////////////////////////////////////////
+            return Ok(dto);
         }
 
         [Authorize (Roles = "Administrator")]
@@ -98,20 +80,11 @@ namespace HotelListing.Controllers
                 return BadRequest(ModelState);
             }
 
-            try
-            {
-                Hotel hotel = _mapper.Map<Hotel>(hotelDTO);
-                await _unitOfWork.Hotels.Insert(hotel);
-                await _unitOfWork.Save();
+            Hotel hotel = _mapper.Map<Hotel>(hotelDTO);
+            await _unitOfWork.Hotels.Insert(hotel);
+            await _unitOfWork.Save();
 
-                return CreatedAtRoute("GetHotel", new { id = hotel.Id }, hotel);
-            }
-            catch (Exception exc)
-            {
-                _logger.LogError(exc.Message);
-                _logger.LogError(exc.StackTrace);
-                return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected server-side error was encountered when attempting to create a new hotel.");
-            }
+            return CreatedAtRoute("GetHotel", new { id = hotel.Id }, hotel);
         }
 
         [Authorize(Roles = "Administrator")]
@@ -134,28 +107,19 @@ namespace HotelListing.Controllers
                 return BadRequest(ModelState);
             }
 
-            try
+            Hotel hotel = await _unitOfWork.Hotels.Get(q => q.Id == id);
+            if (hotel == null)
             {
-                Hotel hotel = await _unitOfWork.Hotels.Get(q => q.Id == id);
-                if (hotel == null)
-                {
-                    string errMsg = $"Hotel with ID of {id} was NOT FOUND. Cannot continue with {nameof(UpdateHotel)}";
-                    _logger.LogError(errMsg);
-                    return BadRequest(errMsg);
-                }
-
-                _mapper.Map(hotelDTO, hotel);
-                _unitOfWork.Hotels.Update(hotel);
-                await _unitOfWork.Save();
-
-                return NoContent();
+                string errMsg = $"Hotel with ID of {id} was NOT FOUND. Cannot continue with {nameof(UpdateHotel)}";
+                _logger.LogError(errMsg);
+                return BadRequest(errMsg);
             }
-            catch (Exception exc)
-            {
-                _logger.LogError(exc.Message);
-                _logger.LogError(exc.StackTrace);
-                return StatusCode(StatusCodes.Status500InternalServerError, $"An unexpected server-side error was encountered when attempting to update Hotel with ID of {id}.");
-            }
+
+            _mapper.Map(hotelDTO, hotel);
+            _unitOfWork.Hotels.Update(hotel);
+            await _unitOfWork.Save();
+
+            return NoContent();
         }
 
         [Authorize(Roles = "Administrator")]
@@ -171,27 +135,19 @@ namespace HotelListing.Controllers
                 _logger.LogError(errMsg);
                 return BadRequest(errMsg);
             }
-            try
-            {
-                Hotel hotel = await _unitOfWork.Hotels.Get(q => q.Id == id);
-                if (hotel == null)
-                {
-                    string errMsg = $"Hotel with ID of {id} was NOT FOUND. Cannot continue with {nameof(DeleteHotel)}";
-                    _logger.LogError(errMsg);
-                    return BadRequest(errMsg);
-                }
 
-                await _unitOfWork.Hotels.Delete(id);
-                await _unitOfWork.Save();
-
-                return NoContent();
-            }
-            catch (Exception exc)
+            Hotel hotel = await _unitOfWork.Hotels.Get(q => q.Id == id);
+            if (hotel == null)
             {
-                _logger.LogError(exc.Message);
-                _logger.LogError(exc.StackTrace);
-                return StatusCode(StatusCodes.Status500InternalServerError, $"An unexpected server-side error was encountered when attempting to delete Hotel with ID of {id}.");
+                string errMsg = $"Hotel with ID of {id} was NOT FOUND. Cannot continue with {nameof(DeleteHotel)}";
+                _logger.LogError(errMsg);
+                return BadRequest(errMsg);
             }
+
+            await _unitOfWork.Hotels.Delete(id);
+            await _unitOfWork.Save();
+
+            return NoContent();
         }
     }
 }

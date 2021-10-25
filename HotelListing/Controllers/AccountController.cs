@@ -43,37 +43,25 @@ namespace HotelListing.Controllers
                 return BadRequest(ModelState);
             }
 
-            try
+            ApiUser userEntity = _mapper.Map<ApiUser>(userDTO);
+            userEntity.UserName = userEntity.Email;
+            IdentityResult identityResult = await _userManager.CreateAsync(userEntity, userDTO.Password);
+
+            if (identityResult.Succeeded == false)
             {
-                ApiUser userEntity = _mapper.Map<ApiUser>(userDTO);
-                userEntity.UserName = userEntity.Email;
-                IdentityResult identityResult = await _userManager.CreateAsync(userEntity, userDTO.Password);
-
-                if (identityResult.Succeeded == false)
+                _logger.LogError($"UserManager.CreateAsync failed for '{userEntity.Email}'");
+                _logger.LogError("Error Details:");
+                foreach (IdentityError identityError in identityResult.Errors)
                 {
-                    _logger.LogError($"UserManager.CreateAsync failed for '{userEntity.Email}'");
-                    _logger.LogError("Error Details:");
-                    foreach (IdentityError identityError in identityResult.Errors)
-                    {
-                        _logger.LogError($"{identityError.Code} - {identityError.Description}");
-                        ModelState.AddModelError(identityError.Code, identityError.Description);
-                    }
-
-                    return BadRequest(ModelState);
+                    _logger.LogError($"{identityError.Code} - {identityError.Description}");
+                    ModelState.AddModelError(identityError.Code, identityError.Description);
                 }
 
-                await _userManager.AddToRolesAsync(userEntity, userDTO.Roles);
-                return Accepted();
-            }
-            catch (Exception exc)
-            {
-                _logger.LogError(exc, $"Something Went Wrong in the {nameof(Register)}");
-                _logger.LogError(exc.Message);
-                _logger.LogError(exc.StackTrace);
-
-                return Problem($"Exception encountered in {nameof(Register)}", statusCode: StatusCodes.Status500InternalServerError);
+                return BadRequest(ModelState);
             }
 
+            await _userManager.AddToRolesAsync(userEntity, userDTO.Roles);
+            return Accepted();
         }
 
         [HttpPost]
@@ -87,23 +75,12 @@ namespace HotelListing.Controllers
                 return BadRequest(ModelState);
             }
 
-            try
+            if (await _authManager.ValidateUser(userDTO) == false)
             {
-                if (await _authManager.ValidateUser(userDTO) == false)
-                {
-                    return Unauthorized();
-                }
-
-                return Accepted(new { Token = await _authManager.CreateToken() });
+                return Unauthorized();
             }
-            catch (Exception exc)
-            {
-                _logger.LogError(exc, $"Exception encountered in {nameof(Login)}");
-                _logger.LogError(exc.Message);
-                _logger.LogError(exc.StackTrace);
 
-                return Problem($"Exception encountered in {nameof(Login)}", statusCode: StatusCodes.Status500InternalServerError);
-            }
+            return Accepted(new { Token = await _authManager.CreateToken() });
         }
     }
 }
