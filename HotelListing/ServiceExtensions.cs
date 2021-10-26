@@ -81,5 +81,11 @@ namespace HotelListing
                 //opt.ApiVersionReader = new HeaderApiVersionReader("api-version");
             });
         }
+
+        public static void ConfigureHttpCacheHeaders(this IServiceCollection services)
+        {
+            services.AddResponseCaching();
+            services.AddHttpCacheHeaders();
+        }
     }
 }

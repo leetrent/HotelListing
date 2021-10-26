@@ -21,6 +21,8 @@ namespace HotelListing.Controllers
         }
 
         [HttpGet]
+        //[ResponseCache(Duration = 60)] // USE FOR FINE-GRAINED CACHING
+        [ResponseCache(CacheProfileName = "CacheDuration-120Seconds")] // USE FOR GLOBAL CACHING
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public IActionResult GetCountries()
