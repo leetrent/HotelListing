@@ -33,8 +33,20 @@ namespace HotelListing.Controllers
         }
 
         [HttpGet]
-       // [ResponseCache(Duration = 60)] // USE FOR FINE-GRAINED CACHING
-        [ResponseCache(CacheProfileName = "CacheDuration-120Seconds")] // USE FOR GLOBAL CACHING
+
+        //////////////////////////////////////////////////////////////////////////////////////////
+        // REPLACED WITH ServiceExtensions.ConfigureHttpCacheHeaders
+        //////////////////////////////////////////////////////////////////////////////////////////
+        // [ResponseCache(Duration = 60)] // USE FOR FINE-GRAINED CACHING
+        // [ResponseCache(CacheProfileName = "CacheDuration-120Seconds")] // USE FOR GLOBAL CACHING
+
+        //////////////////////////////////////////////////////////////////////////////////////////
+        // Can be used to override global caching on a particular endpoint at any point. 
+        //////////////////////////////////////////////////////////////////////////////////////////
+        // [HttpCacheExpiration(CacheLocation = CacheLocation.Public, MaxAge = 60)]
+        // [HttpCacheValidation(MustRevalidate = false)]
+        //////////////////////////////////////////////////////////////////////////////////////////
+        
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetCountries([FromQuery] RequestParams requestParams)
