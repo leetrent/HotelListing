@@ -88,7 +88,7 @@ namespace HotelListing
             services.AddResponseCaching();
             services.AddHttpCacheHeaders
             (
-                (expirationOpt) => { expirationOpt.MaxAge = 30; expirationOpt.CacheLocation = CacheLocation.Public; },
+                (expirationOpt) => { expirationOpt.MaxAge = 60; expirationOpt.CacheLocation = CacheLocation.Public; },
                 (validationOpt) => { validationOpt.MustRevalidate = true; }
             ); 
         }

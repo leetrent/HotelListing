@@ -12,7 +12,8 @@ using SignInResult = Microsoft.AspNetCore.Identity.SignInResult;
 
 namespace HotelListing.Controllers
 {
-    [Route("api/[controller]")]
+    [ApiVersion("1.0", Deprecated = false)]
+    [Route("api/{v:apiversion}/account")]
     [ApiController]
     public class AccountController : ControllerBase
     {
